@@ -1,50 +1,51 @@
-// Base de Dados
-let tasks = [
- { id: 1, title: 'Estudar WEB', completed: 0},
- { id: 2, title: 'Revisar PBC', completed: 1},
- { id: 3, title: 'Estudar BD', completed: 0},
-];
+const db = require('../config/db'); 
 
- // Funções para manipular as tarefas
- const getAllTasks = () => tasks;
 
- const getTaskId = (id) => tasks.find(task => task.id === id);
+const tasks = {
+getTasks: (filtros, callback) => { 
+  const params = [];
+  let query = 'SELECT * FROM tarefas';
+  const condicoes = [];
 
- const deleteTask = (id) => {
-  const indice = tasks.findIndex(item => item.id === id);
-
-  if (indice > -1) { // Verifica se o item foi encontrado
-    //tasks.filter((_, i) => i !== indice);
-    //tasks.find(task => task.id !== id);
-    tasks.splice(indice, 1); // Remove 1 elemento a partir do índice encontrado
+  if (filtros.title && filtros.title!== '') {
+    condicoes.push('LOWER(titulo) LIKE ?');
+    params.push(filtros.title.toLowerCase() + '%');
   }
- };
 
- const getTasks = ({ title = "", completed = null } = {}) => {
-   
-   var taskslist = tasks;
-   if (completed!==null){
-      taskslist = taskslist.filter((task) => task.completed === completed)
-   }
-   if (title!==''){
-    taskslist =taskslist.filter((task) => task.title.toLowerCase().includes(title.toLowerCase()))
-   }
-   return taskslist
-};
+  if (filtros.completed !== undefined && filtros.completed !== null && filtros.completed !== '') {
+    const feita = filtros.completed === 'true' || filtros.completed === 1 ? 1 : 0;
+    condicoes.push('completa = ?');
+    params.push(feita);
+  }
 
- const createTask = (taskData) => {
-    const newTask = {
-    id: tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
-    title: taskData.title,
-    completed: taskData.completed,
-    };
-    tasks.push(newTask);
- };
+  if (condicoes.length > 0) {
+    query += ' WHERE ' + condicoes.join(' AND ');
+  }
 
- module.exports = {
-    getAllTasks ,
-    getTaskId ,
-    createTask,
-    getTasks,
-    deleteTask
- }
+  console.log("Query:", query, params);
+  db.query(query, params, callback); 
+},
+
+
+create: (data, callback) => { 
+const { titulo, completa } = data; 
+db.query('INSERT INTO tarefas(titulo, completa) VALUES (?, ?)', [titulo, completa], callback); 
+}, 
+
+delete: (id, callback) => { 
+db.query('DELETE FROM tarefas where id = ?', [id], callback); 
+},
+
+getTask: (id, callback) => { 
+db.query('SELECT * FROM tarefas WHERE id = ?', [id], callback);     
+},
+
+update: (id, data, callback) => {
+  const { titulo, completa } = data;
+  const sql = 'UPDATE tarefas SET titulo = ?, completa = ? WHERE id = ?';
+  db.query(sql, [titulo, completa, id], callback);
+},
+
+}
+
+module.exports = tasks;
