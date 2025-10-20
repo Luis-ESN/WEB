@@ -1,19 +1,11 @@
 const Task = require('../models/taskModel'); 
 
-const listarTarefas = (req, res) => {
-   const filtros = req.query;
-Task.getTasks(filtros, (err, results) => { 
-if (err) return res.status(500).send('Erro ao buscar tarefas'); 
-return res.status(200).json(results); 
-}); 
-}; 
-
-exports.listarTarefas = async (req, res) => { 
+const listarTarefas = async (req, res) => { 
 try { 
 const tarefas = await Task.findAll(); 
-res.status(200).json(tarefas); 
+return res.status(200).json(tarefas); 
 } catch (err) { 
-res.status(500).send('Erro ao buscar tarefas'); 
+return res.status(500).send('Erro ao buscar tarefas'); 
 } 
 };
 
